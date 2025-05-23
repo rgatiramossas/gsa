@@ -1,0 +1,100 @@
+Crie um app em React Native com foco em mobile, utilizando TypeScript, com uma interface responsiva e moderna, estruturado com navegação via menu inferior fixo. Este app será utilizado em 99% dos casos por dispositivos móveis, portanto a interface precisa se comportar como um app nativo (estilo PWA/mobile app).
+
+🔐 Perfis de Usuários
+O app deve ter sistema de autenticação com 3 tipos de usuários:
+
+Administrador (acesso total)
+
+Técnico (visualiza e cadastra OS que ele mesmo realizou)
+
+Gestor (visualiza OS e orçamentos de sua equipe)
+
+🧭 Navegação principal (via menu fixo inferior):
+Painel
+
+Clientes
+
+Serviços
+
+Orçamentos (esta página ainda não será criada, apenas reserve o botão)
+
+📊 Página: Painel (Dashboard)
+A página inicial (Painel) deve exibir cards com gráficos de desempenho da equipe. Os dados podem ser mockados, por enquanto. Use bibliotecas como react-native-chart-kit ou victory-native para visualização dos gráficos.
+
+👥 Página: Clientes
+Exibir:
+
+Lista de clientes (Nome + Local)
+
+Botão para adicionar novo cliente
+
+Cada item leva a uma página de detalhes do cliente, contendo:
+
+Nome, Local
+
+Histórico de Ordens de Serviço (OS)
+
+Histórico de Orçamentos (placeholder)
+
+Botões: Editar cliente, Excluir cliente
+
+Formulário de novo cliente:
+
+Nome (obrigatório)
+
+Local (obrigatório)
+
+🛠️ Página: Serviços (Ordens de Serviço - OS)
+Exibir:
+
+Lista de OS com informações principais
+
+Botão para criar nova OS
+
+Formulário para nova OS:
+
+Cliente (dropdown que puxa os clientes do banco de dados – obrigatório)
+
+Veículo (campo manual – obrigatório)
+
+Placa (campo manual)
+
+Chassis (campo manual)
+
+Regras: se Placa for preenchido, Chassis se torna opcional, e vice-versa
+
+Data (preenchimento automático com a data atual, mas pode ser alterado)
+
+Técnico responsável (nome do usuário logado – não editável, exceto se for administrador)
+
+Tipo de serviço (obrigatório – opções: Amassado de Rua, Granizo, Outros)
+
+Valor do serviço (em euros – obrigatório)
+
+Valor administrativo (somente visível e editável pelo Administrador)
+
+Upload de até 6 imagens (via galeria ou câmera)
+
+Página de detalhes da OS:
+
+Exibir todos os campos preenchidos
+
+Botões para Editar OS ou Excluir OS (somente quem criou ou um Administrador pode editar/excluir)
+
+🔗 Backend e Banco de Dados
+O app deve se conectar a um banco de dados MySQL externo
+
+Use uma API backend (Node.js + Express ou Laravel de preferência) para gerenciar as requisições
+
+Autenticação pode ser via JWT
+
+Os dados devem ser sincronizados com o banco remoto com foco em eficiência e segurança
+
+🧱 Extras
+Use React Navigation para gerenciamento de rotas
+
+Use AsyncStorage para guardar sessão/token
+
+Utilize Context API ou Redux para gerenciamento de estados globais (usuário, permissões, etc.)
+
+Estilize usando Tailwind para React Native (opcional) ou styled-components
