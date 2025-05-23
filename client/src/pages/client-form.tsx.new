@@ -1,11 +1,12 @@
 import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation, useParams } from "wouter";
+import { useLocation, useParams, useRoute } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Client, insertClientSchema } from "@shared/schema";
+import { insertClientSchema } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
+import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -16,21 +17,31 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 
-const formSchema = insertClientSchema.extend({});
+// Estender o schema para validação do formulário
+const formSchema = insertClientSchema.extend({
+  // Os campos obrigatórios já estão definidos no schema original
+});
 
-export default function EditClient() {
+export default function ClientFormPage() {
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
-  const params = useParams<{ id: string }>();
-  const clientId = parseInt(params.id, 10);
+  const params = useParams<{ id?: string }>();
+  const [_, isEditPage] = useRoute("/clients/edit/:id");
   
-  // Formulário com valores padrão vazios
+  const isEditing = isEditPage && params.id;
+  const clientId = isEditing && params.id ? parseInt(params.id, 10) : undefined;
+  
+  // Carregar dados do cliente se estiver editando
+  const { data: clientData, isLoading } = useQuery({
+    queryKey: ['/api/clients', clientId],
+    enabled: Boolean(isAuthenticated && isEditing && clientId !== undefined),
+  });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -41,27 +52,55 @@ export default function EditClient() {
     },
   });
 
-  // Buscar dados do cliente
-  const { data: client, isLoading, error } = useQuery<Client>({
-    queryKey: ['/api/clients', clientId],
-    enabled: isAuthenticated && !isNaN(clientId),
-  });
-
-  // Preencher o formulário quando os dados do cliente forem carregados
+  // Atualizar os valores do formulário ao carregar os dados do cliente
   useEffect(() => {
-    if (client) {
+    if (clientData && typeof clientData === 'object' && 'name' in clientData) {
       form.reset({
-        name: client.name,
-        location: client.location,
-        email: client.email || "",
-        phone: client.phone || "",
+        name: String(clientData.name || ""),
+        location: String(clientData.location || ""),
+        email: String(clientData.email || ""),
+        phone: String(clientData.phone || ""),
       });
     }
-  }, [client, form]);
+  }, [clientData, form]);
+
+  // Criar cliente
+  const createMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
+      const response = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erro ao cadastrar cliente');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Cliente cadastrado",
+        description: "O cliente foi cadastrado com sucesso",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
+      setLocation("/clients");
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao cadastrar cliente",
+        description: "Ocorreu um erro ao cadastrar o cliente. Tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Atualizar cliente
   const updateMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
+      if (!clientId) throw new Error('ID do cliente é necessário');
+
       const response = await fetch(`/api/clients/${clientId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -80,7 +119,9 @@ export default function EditClient() {
         description: "O cliente foi atualizado com sucesso",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/clients', clientId] });
+      if (clientId) {
+        queryClient.invalidateQueries({ queryKey: ['/api/clients', clientId] });
+      }
       setLocation(`/clients/${clientId}`);
     },
     onError: (error) => {
@@ -92,8 +133,13 @@ export default function EditClient() {
     },
   });
 
+  // Enviar formulário
   function onSubmit(values: z.infer<typeof formSchema>) {
-    updateMutation.mutate(values);
+    if (isEditing) {
+      updateMutation.mutate(values);
+    } else {
+      createMutation.mutate(values);
+    }
   }
 
   if (!isAuthenticated) {
@@ -101,40 +147,24 @@ export default function EditClient() {
     return null;
   }
 
-  if (isNaN(clientId)) {
-    setLocation("/clients");
-    return null;
-  }
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="container px-4 py-6 max-w-md mx-auto">
-      <Button 
-        variant="ghost" 
-        className="mb-4 p-0 flex items-center gap-1 hover:bg-transparent"
-        onClick={() => setLocation(`/clients/${clientId}`)}
-      >
-        <ArrowLeft className="h-4 w-4" />
-        <span>Voltar</span>
-      </Button>
+    <AppShell>
+      <div className="container px-4 py-6 max-w-md mx-auto">
+        <Button 
+          variant="ghost" 
+          className="mb-4 p-0 flex items-center gap-1 hover:bg-transparent"
+          onClick={() => isEditing ? setLocation(`/clients/${clientId}`) : setLocation("/clients")}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Voltar</span>
+        </Button>
 
-      <h1 className="text-2xl font-bold mb-6">Editar Cliente</h1>
+        <h1 className="text-2xl font-bold mb-6">
+          {isEditing ? "Editar Cliente" : "Novo Cliente"}
+        </h1>
 
-      {isLoading ? (
-        <div className="space-y-6">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-        </div>
-      ) : error ? (
-        <div className="text-center py-8">
-          <p className="text-red-500">Erro ao carregar informações do cliente.</p>
-          <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
-            Tentar novamente
-          </Button>
-        </div>
-      ) : (
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -197,16 +227,12 @@ export default function EditClient() {
               )}
             />
             
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={updateMutation.isPending}
-            >
-              {updateMutation.isPending ? "Salvando..." : "Atualizar"}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? "Salvando..." : isEditing ? "Atualizar" : "Cadastrar"}
             </Button>
           </form>
         </Form>
-      )}
-    </div>
+      </div>
+    </AppShell>
   );
 }

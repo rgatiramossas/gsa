@@ -4,7 +4,7 @@ import { useLocation, useParams, useRoute } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Client, insertClientSchema } from "@shared/schema";
+import { insertClientSchema } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 
@@ -37,9 +36,10 @@ export default function ClientFormPage() {
   const isEditing = isEditPage && params.id;
   const clientId = isEditing && params.id ? parseInt(params.id, 10) : undefined;
   
-  const { data: clientData, isLoading } = useQuery<Client>({
+  // Carregar dados do cliente se estiver editando
+  const { data: clientData, isLoading } = useQuery({
     queryKey: ['/api/clients', clientId],
-    enabled: isAuthenticated && isEditing && clientId !== undefined,
+    enabled: Boolean(isAuthenticated && isEditing && clientId !== undefined),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -54,19 +54,30 @@ export default function ClientFormPage() {
 
   // Atualizar os valores do formulário ao carregar os dados do cliente
   useEffect(() => {
-    if (clientData) {
+    if (clientData && typeof clientData === 'object' && 'name' in clientData) {
       form.reset({
-        name: clientData.name,
-        location: clientData.location,
-        email: clientData.email || "",
-        phone: clientData.phone || "",
+        name: String(clientData.name || ""),
+        location: String(clientData.location || ""),
+        email: String(clientData.email || ""),
+        phone: String(clientData.phone || ""),
       });
     }
   }, [clientData, form]);
 
+  // Criar cliente
   const createMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
-      return apiRequest('/api/clients', 'POST', values);
+      const response = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erro ao cadastrar cliente');
+      }
+      
+      return await response.json();
     },
     onSuccess: () => {
       toast({
@@ -85,9 +96,22 @@ export default function ClientFormPage() {
     },
   });
 
+  // Atualizar cliente
   const updateMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
-      return apiRequest(`/api/clients/${clientId}`, 'PATCH', values);
+      if (!clientId) throw new Error('ID do cliente é necessário');
+
+      const response = await fetch(`/api/clients/${clientId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erro ao atualizar cliente');
+      }
+      
+      return await response.json();
     },
     onSuccess: () => {
       toast({
