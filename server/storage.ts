@@ -5,6 +5,8 @@ import {
   services, Service, InsertService,
   budgets, Budget, InsertBudget
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 
 // Storage interface with all CRUD operations
 export interface IStorage {
@@ -349,4 +351,362 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values({
+      ...insertUser,
+      role: insertUser.role as "admin" | "technician" | "manager"
+    }).returning();
+    return user;
+  }
+
+  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
+    // Se role estiver sendo atualizado, garanta que está no formato correto
+    const dataToUpdate = {...userData};
+    if (userData.role) {
+      dataToUpdate.role = userData.role as "admin" | "technician" | "manager";
+    }
+    
+    const [user] = await db
+      .update(users)
+      .set(dataToUpdate)
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  // Client operations
+  async getClient(id: number): Promise<Client | undefined> {
+    const [client] = await db.select().from(clients).where(eq(clients.id, id));
+    return client;
+  }
+
+  async getClients(): Promise<Client[]> {
+    return db.select().from(clients);
+  }
+
+  async createClient(client: InsertClient): Promise<Client> {
+    // Garantir que email e phone nunca sejam undefined
+    const clientData = {
+      ...client,
+      email: client.email || null,
+      phone: client.phone || null
+    };
+    
+    const [newClient] = await db.insert(clients).values(clientData).returning();
+    return newClient;
+  }
+
+  async updateClient(id: number, clientData: Partial<InsertClient>): Promise<Client | undefined> {
+    // Garantir que email e phone nunca sejam undefined
+    const dataToUpdate = {...clientData};
+    if (clientData.email === undefined) {
+      dataToUpdate.email = null;
+    }
+    if (clientData.phone === undefined) {
+      dataToUpdate.phone = null;
+    }
+    
+    const [updatedClient] = await db
+      .update(clients)
+      .set(dataToUpdate)
+      .where(eq(clients.id, id))
+      .returning();
+    return updatedClient;
+  }
+
+  async deleteClient(id: number): Promise<boolean> {
+    const result = await db.delete(clients).where(eq(clients.id, id));
+    return !!result;
+  }
+
+  // Vehicle operations
+  async getVehicle(id: number): Promise<Vehicle | undefined> {
+    const [vehicle] = await db.select().from(vehicles).where(eq(vehicles.id, id));
+    return vehicle;
+  }
+
+  async getVehiclesByClient(clientId: number): Promise<Vehicle[]> {
+    return db.select().from(vehicles).where(eq(vehicles.clientId, clientId));
+  }
+
+  async createVehicle(vehicle: InsertVehicle): Promise<Vehicle> {
+    // Garantir que campos opcionais nunca sejam undefined
+    const vehicleData = {
+      ...vehicle,
+      plate: vehicle.plate || null,
+      chassis: vehicle.chassis || null,
+      color: vehicle.color || null
+    };
+    
+    const [newVehicle] = await db.insert(vehicles).values(vehicleData).returning();
+    return newVehicle;
+  }
+
+  async updateVehicle(id: number, vehicleData: Partial<InsertVehicle>): Promise<Vehicle | undefined> {
+    // Garantir que campos opcionais nunca sejam undefined
+    const dataToUpdate = {...vehicleData};
+    if (vehicleData.plate === undefined) {
+      dataToUpdate.plate = null;
+    }
+    if (vehicleData.chassis === undefined) {
+      dataToUpdate.chassis = null;
+    }
+    if (vehicleData.color === undefined) {
+      dataToUpdate.color = null;
+    }
+    
+    const [updatedVehicle] = await db
+      .update(vehicles)
+      .set(dataToUpdate)
+      .where(eq(vehicles.id, id))
+      .returning();
+    return updatedVehicle;
+  }
+
+  async deleteVehicle(id: number): Promise<boolean> {
+    const result = await db.delete(vehicles).where(eq(vehicles.id, id));
+    return !!result;
+  }
+
+  // Service operations
+  async getService(id: number): Promise<Service | undefined> {
+    const [service] = await db.select().from(services).where(eq(services.id, id));
+    return service;
+  }
+
+  async getServices(): Promise<Service[]> {
+    return db.select().from(services);
+  }
+
+  async getServicesByClient(clientId: number): Promise<Service[]> {
+    return db.select().from(services).where(eq(services.clientId, clientId));
+  }
+
+  async getServicesByTechnician(technicianId: number): Promise<Service[]> {
+    return db.select().from(services).where(eq(services.technicianId, technicianId));
+  }
+
+  async createService(service: InsertService): Promise<Service> {
+    // Garantir que os campos do tipo enumerado estejam corretos
+    const serviceData = {
+      ...service,
+      status: service.status as "pending" | "in_progress" | "completed",
+      serviceType: service.serviceType as "street_dent" | "hail" | "other",
+      vehiclePlate: service.vehiclePlate || null,
+      vehicleChassis: service.vehicleChassis || null,
+      vehicleId: service.vehicleId || null,
+      administrativeValue: service.administrativeValue || null,
+      images: service.images || []
+    };
+    
+    const [newService] = await db.insert(services).values(serviceData).returning();
+    return newService;
+  }
+
+  async updateService(id: number, serviceData: Partial<InsertService>): Promise<Service | undefined> {
+    // Garantir que os campos do tipo enumerado estejam corretos
+    const dataToUpdate = {...serviceData};
+    
+    if (serviceData.status) {
+      dataToUpdate.status = serviceData.status as "pending" | "in_progress" | "completed";
+    }
+    
+    if (serviceData.serviceType) {
+      dataToUpdate.serviceType = serviceData.serviceType as "street_dent" | "hail" | "other";
+    }
+    
+    // Lidar com campos opcionais
+    if (serviceData.vehiclePlate === undefined) {
+      dataToUpdate.vehiclePlate = null;
+    }
+    
+    if (serviceData.vehicleChassis === undefined) {
+      dataToUpdate.vehicleChassis = null;
+    }
+    
+    if (serviceData.vehicleId === undefined) {
+      dataToUpdate.vehicleId = null;
+    }
+    
+    if (serviceData.administrativeValue === undefined) {
+      dataToUpdate.administrativeValue = null;
+    }
+    
+    if (serviceData.images === undefined) {
+      dataToUpdate.images = [];
+    }
+    
+    const [updatedService] = await db
+      .update(services)
+      .set(dataToUpdate)
+      .where(eq(services.id, id))
+      .returning();
+    return updatedService;
+  }
+
+  async deleteService(id: number): Promise<boolean> {
+    const result = await db.delete(services).where(eq(services.id, id));
+    return !!result;
+  }
+
+  // Dashboard data
+  async getDashboardStats(): Promise<{
+    pendingServices: number;
+    inProgressServices: number;
+    completedServices: number;
+    totalRevenue: number;
+  }> {
+    const allServices = await db.select().from(services);
+    
+    const pendingServices = allServices.filter(s => s.status === 'pending').length;
+    const inProgressServices = allServices.filter(s => s.status === 'in_progress').length;
+    const completedServices = allServices.filter(s => s.status === 'completed').length;
+    
+    // Calculate total revenue from completed services
+    const totalRevenue = allServices
+      .filter(s => s.status === 'completed')
+      .reduce((total, service) => total + service.serviceValue, 0);
+    
+    return {
+      pendingServices,
+      inProgressServices,
+      completedServices,
+      totalRevenue
+    };
+  }
+
+  async getRecentServices(limit: number): Promise<Service[]> {
+    return db
+      .select()
+      .from(services)
+      .orderBy(desc(services.createdAt))
+      .limit(limit);
+  }
+
+  // Método para inicializar o banco de dados com dados de exemplo
+  async seedSampleData() {
+    // Verificar se já existem usuários no banco de dados
+    const userCount = await db.select().from(users);
+    if (userCount.length > 0) {
+      return; // Não adicionar dados de exemplo se já existirem registros
+    }
+
+    // Adicionar usuário admin
+    const [admin] = await db.insert(users).values({
+      username: "admin",
+      password: "admin123", // Em um app real, isso seria hashado
+      name: "Alessandro Figueiredo",
+      email: "admin@example.com",
+      role: "admin" as "admin"
+    }).returning();
+
+    // Adicionar clientes
+    const [client1] = await db.insert(clients).values({
+      name: "FORD - Waldshut",
+      location: "Waldshut-Tingen",
+      email: "contact@ford-waldshut.com",
+      phone: "+49123456789"
+    }).returning();
+    
+    const [client2] = await db.insert(clients).values({
+      name: "Lackierzentrum",
+      location: "Lorrach",
+      email: null,
+      phone: null
+    }).returning();
+
+    // Adicionar veículos
+    const [vehicle1] = await db.insert(vehicles).values({
+      clientId: client1.id,
+      brand: "TESTE",
+      model: "TESET",
+      plate: "1111",
+      chassis: null,
+      color: null
+    }).returning();
+    
+    const [vehicle2] = await db.insert(vehicles).values({
+      clientId: client1.id,
+      brand: "HONDA",
+      model: "Marea",
+      plate: "ed111111",
+      chassis: null,
+      color: null
+    }).returning();
+    
+    const [vehicle3] = await db.insert(vehicles).values({
+      clientId: client1.id,
+      brand: "teste",
+      model: "teste",
+      plate: "1111",
+      chassis: null,
+      color: null
+    }).returning();
+    
+    const [vehicle4] = await db.insert(vehicles).values({
+      clientId: client2.id,
+      brand: "Exemplo teste",
+      model: "Teste",
+      plate: "Teste",
+      chassis: null,
+      color: null
+    }).returning();
+    
+    const [vehicle5] = await db.insert(vehicles).values({
+      clientId: client2.id,
+      brand: "Kia",
+      model: "Kia",
+      plate: "LÖT711",
+      chassis: null,
+      color: null
+    }).returning();
+
+    // Adicionar serviços
+    await db.insert(services).values({
+      clientId: client2.id,
+      vehicleId: vehicle5.id,
+      vehicleName: "Kia Kia",
+      vehiclePlate: "LÖT711",
+      vehicleChassis: null,
+      date: new Date('2025-05-05'),
+      technicianId: admin.id,
+      technicianName: "Alessandro Figueiredo",
+      serviceType: "street_dent" as "street_dent",
+      serviceValue: 12000, // 120.00 €
+      administrativeValue: 9000, // 90.00 €
+      status: "completed" as "completed",
+      images: []
+    });
+    
+    await db.insert(services).values({
+      clientId: client1.id,
+      vehicleId: vehicle2.id,
+      vehicleName: "HONDA Marea",
+      vehiclePlate: "ed111111",
+      vehicleChassis: null,
+      date: new Date('2025-05-07'),
+      technicianId: admin.id,
+      technicianName: "Alessandro Figueiredo",
+      serviceType: "hail" as "hail",
+      serviceValue: 18000, // 180.00 €
+      administrativeValue: 15000, // 150.00 €
+      status: "pending" as "pending",
+      images: []
+    });
+  }
+}
+
+// Exportar a instância de DatabaseStorage para uso na aplicação
+export const storage = new DatabaseStorage();
