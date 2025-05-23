@@ -5,16 +5,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
-import ClientsIndex from "@/pages/clients/index";
-import ClientDetail from "@/pages/clients/[id]";
-import NewClient from "@/pages/clients/new";
-import EditClient from "@/pages/clients/edit/[id]";
-import ServicesIndex from "@/pages/services/index";
-import ServiceDetail from "@/pages/services/[id]";
-import NewService from "@/pages/services/new";
-import EditService from "@/pages/services/edit/[id]";
-import BudgetIndex from "@/pages/budget/index";
 import Login from "@/pages/login";
+
+// Importar as páginas que criamos
+import ClientsPage from "@/pages/clients";
+import ClientDetailPage from "@/pages/client-detail";
+import ClientFormPage from "@/pages/client-form";
 import { useAuth } from "./hooks/useAuth";
 import { AppShell } from "./components/layout/AppShell";
 import { useEffect } from "react";
@@ -51,19 +47,19 @@ function Router() {
       </Route>
       
       <Route path="/clients">
-        <ProtectedRoute component={ClientsIndex} />
+        <ProtectedRoute component={ClientsPage} />
       </Route>
       
       <Route path="/clients/new">
-        <ProtectedRoute component={NewClient} />
+        <ProtectedRoute component={ClientFormPage} />
       </Route>
       
       <Route path="/clients/:id">
-        {(params) => <ProtectedRoute component={ClientDetail} id={params.id} />}
+        {(params) => <ProtectedRoute component={ClientDetailPage} id={params.id} />}
       </Route>
       
       <Route path="/clients/edit/:id">
-        {(params) => <ProtectedRoute component={EditClient} id={params.id} />}
+        {(params) => <ProtectedRoute component={ClientFormPage} id={params.id} isEditing={true} />}
       </Route>
       
       <Route path="/services">
