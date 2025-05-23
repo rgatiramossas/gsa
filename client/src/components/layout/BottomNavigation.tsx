@@ -17,12 +17,28 @@ export function BottomNavigation() {
     if (path !== "/" && location.startsWith(path)) return true;
     return false;
   };
+
+  const goToDashboard = () => {
+    window.location.href = '/dashboard';
+  };
+
+  const goToClients = () => {
+    window.location.href = '/clients';
+  };
+
+  const goToServices = () => {
+    window.location.href = '/services';
+  };
+
+  const goToBudget = () => {
+    window.location.href = '/budget';
+  };
   
   return (
     <nav className="fixed bottom-0 inset-x-0 bg-secondary text-white shadow-lg z-10">
       <div className="flex justify-around">
         <button 
-          onClick={() => navigate("/dashboard")} 
+          onClick={goToDashboard} 
           className={`flex flex-col items-center py-2 px-4 w-1/4 text-center ${isActive("/") ? "bg-secondary-dark" : ""}`}
         >
           <HomeIcon className="h-5 w-5" />
@@ -30,7 +46,7 @@ export function BottomNavigation() {
         </button>
         
         <button 
-          onClick={() => navigate("/clients")} 
+          onClick={goToClients} 
           className={`flex flex-col items-center py-2 px-4 w-1/4 text-center ${isActive("/clients") ? "bg-secondary-dark" : ""}`}
         >
           <Users className="h-5 w-5" />
@@ -38,7 +54,7 @@ export function BottomNavigation() {
         </button>
         
         <button 
-          onClick={() => navigate("/services")} 
+          onClick={goToServices} 
           className={`flex flex-col items-center py-2 px-4 w-1/4 text-center ${isActive("/services") ? "bg-secondary-dark" : ""}`}
         >
           <Drill className="h-5 w-5" />
@@ -46,7 +62,7 @@ export function BottomNavigation() {
         </button>
         
         <button 
-          onClick={() => navigate("/budget")} 
+          onClick={goToBudget} 
           className={`flex flex-col items-center py-2 px-4 w-1/4 text-center ${isActive("/budget") ? "bg-secondary-dark" : ""}`}
         >
           <FileText className="h-5 w-5" />

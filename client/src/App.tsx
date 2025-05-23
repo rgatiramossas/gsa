@@ -7,11 +7,11 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Login from "@/pages/login";
 
-// Importamos nossos componentes da pasta pages-new (estrutura simplificada)
-import ClientsPage from "@/pages-new/clients";
-import ClientDetailPage from "@/pages-new/client-detail";
-import ClientNewPage from "@/pages-new/client-new";
-import ClientEditPage from "@/pages-new/client-edit";
+// Importamos nossos componentes da pasta pages
+import ClientsPage from "@/pages/clients";
+import ClientDetailPage from "@/pages/client-detail";
+import ClientFormPage from "@/pages/client-form";
+import MenuPage from "@/pages/menu";
 import { useAuth } from "./hooks/useAuth";
 import { AppShell } from "./components/layout/AppShell";
 import { useEffect } from "react";
@@ -52,7 +52,7 @@ function Router() {
       </Route>
       
       <Route path="/clients/new">
-        <ProtectedRoute component={ClientNewPage} />
+        <ProtectedRoute component={ClientFormPage} />
       </Route>
       
       <Route path="/clients/:id">
@@ -60,7 +60,11 @@ function Router() {
       </Route>
       
       <Route path="/clients/edit/:id">
-        {(params) => <ProtectedRoute component={ClientEditPage} id={params.id} />}
+        {(params) => <ProtectedRoute component={ClientFormPage} id={params.id} isEditing={true} />}
+      </Route>
+      
+      <Route path="/menu">
+        <ProtectedRoute component={MenuPage} />
       </Route>
       
       {/* Desabilitadas temporariamente para foco nas páginas de clientes
