@@ -19,19 +19,19 @@ export function BottomNavigation() {
   };
 
   const goToDashboard = () => {
-    window.location.href = '/dashboard';
+    navigate('/dashboard');
   };
 
   const goToClients = () => {
-    window.location.href = '/clients';
+    navigate('/clients');
   };
 
   const goToServices = () => {
-    window.location.href = '/services';
+    navigate('/services');
   };
 
   const goToBudget = () => {
-    window.location.href = '/budget';
+    navigate('/budget');
   };
   
   return (
