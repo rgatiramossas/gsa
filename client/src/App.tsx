@@ -12,6 +12,7 @@ import ClientsPage from "@/pages/clients";
 import ClientDetailPage from "@/pages/client-detail";
 import ClientFormPage from "@/pages/client-form";
 import MenuPage from "@/pages/menu";
+import SimpleNavigation from "@/pages/SimpleNavigation";
 import { useAuth } from "./hooks/useAuth";
 import { AppShell } from "./components/layout/AppShell";
 import { useEffect } from "react";
@@ -65,6 +66,10 @@ function Router() {
       
       <Route path="/menu">
         <ProtectedRoute component={MenuPage} />
+      </Route>
+      
+      <Route path="/nav">
+        <ProtectedRoute component={SimpleNavigation} />
       </Route>
       
       {/* Desabilitadas temporariamente para foco nas páginas de clientes
