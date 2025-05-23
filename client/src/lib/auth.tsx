@@ -1,5 +1,4 @@
 import React, { createContext, useState, useEffect } from "react";
-import { apiRequest } from "./queryClient";
 
 type User = {
   id: number;
@@ -17,68 +16,49 @@ type AuthContextType = {
   logout: () => void;
 };
 
+// Usuário padrão para demonstração
+const DEFAULT_ADMIN_USER: User = {
+  id: 1,
+  username: "admin",
+  name: "Administrador",
+  email: "admin@eurodentexperts.com",
+  role: "admin"
+};
+
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
-  loading: true,
+  loading: false,
   login: async () => {},
   logout: () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  // Check for existing session on load
+  // Verificar sessão local
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const storedUser = localStorage.getItem("user");
-        const storedToken = localStorage.getItem("token");
-        
-        if (storedUser && storedToken) {
-          // Validate token by making a request to /api/users/me
-          const headers = new Headers();
-          headers.append("x-user-id", JSON.parse(storedUser).id);
-          
-          const response = await fetch("/api/users/me", {
-            method: "GET",
-            headers,
-            credentials: "include",
-          });
-          
-          if (response.ok) {
-            setUser(JSON.parse(storedUser));
-          } else {
-            // Clear invalid session
-            localStorage.removeItem("user");
-            localStorage.removeItem("token");
-          }
-        }
-      } catch (error) {
-        console.error("Authentication error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    checkAuth();
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
   }, []);
 
   const login = async (username: string, password: string) => {
     setLoading(true);
     
     try {
-      const response = await apiRequest("POST", "/api/login", { username, password });
-      const data = await response.json();
+      // Verificação de login simplificada para demonstração
+      if (username === "admin" && password === "password") {
+        localStorage.setItem("user", JSON.stringify(DEFAULT_ADMIN_USER));
+        setUser(DEFAULT_ADMIN_USER);
+        return;
+      }
       
-      // Store user and token in localStorage
-      localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("token", data.token);
-      
-      setUser(data.user);
+      throw new Error("Credenciais inválidas");
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Erro de login:", error);
       throw error;
     } finally {
       setLoading(false);
@@ -87,7 +67,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     localStorage.removeItem("user");
-    localStorage.removeItem("token");
     setUser(null);
   };
 
