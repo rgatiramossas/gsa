@@ -1,6 +1,6 @@
 import express, { type Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { mySQLStorage as storage } from "./mysql-storage";
 import { z } from "zod";
 import { 
   insertUserSchema, 
