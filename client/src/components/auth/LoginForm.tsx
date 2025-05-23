@@ -1,7 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useI18n } from "@/hooks/useI18n";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -16,7 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 const loginSchema = z.object({
   username: z.string().min(1, {
@@ -28,7 +27,6 @@ const loginSchema = z.object({
 });
 
 export function LoginForm() {
-  const { t } = useI18n();
   const { login } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
@@ -51,8 +49,8 @@ export function LoginForm() {
     } catch (error) {
       console.error("Login error:", error);
       toast({
-        title: t("auth.login_failed"),
-        description: t("auth.invalid_credentials"),
+        title: "Login failed",
+        description: "Invalid username or password",
         variant: "destructive",
       });
     } finally {
@@ -78,7 +76,7 @@ export function LoginForm() {
           </svg>
         </div>
         <h1 className="text-2xl font-bold text-gray-800">Euro Dent Experts</h1>
-        <p className="text-gray-600">{t("auth.login_subtitle")}</p>
+        <p className="text-gray-600">Vehicle Dent Repair Service Management</p>
       </div>
       
       <Form {...form}>
@@ -88,9 +86,9 @@ export function LoginForm() {
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("auth.username")}</FormLabel>
+                <FormLabel>Username</FormLabel>
                 <FormControl>
-                  <Input placeholder={t("auth.username_placeholder")} {...field} />
+                  <Input placeholder="Enter your username" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -102,7 +100,7 @@ export function LoginForm() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("auth.password")}</FormLabel>
+                <FormLabel>Password</FormLabel>
                 <FormControl>
                   <Input type="password" placeholder="********" {...field} />
                 </FormControl>
@@ -116,7 +114,7 @@ export function LoginForm() {
             className="w-full" 
             disabled={isLoading}
           >
-            {isLoading ? t("common.loading") : t("auth.login")}
+            {isLoading ? "Loading..." : "Login"}
           </Button>
         </form>
       </Form>

@@ -1,11 +1,9 @@
-import { useI18n } from "@/hooks/useI18n";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 
 export default function Login() {
-  const { t } = useI18n();
   const { isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
   
