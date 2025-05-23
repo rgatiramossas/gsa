@@ -1,13 +1,12 @@
-import { useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation, useParams, useRoute } from "wouter";
 import { useForm } from "react-hook-form";
+import { useLocation, useParams } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { insertClientSchema } from "@shared/schema";
+import { Client, insertClientSchema } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
-import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -16,118 +15,103 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronLeft } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
-// Estender o schema para validação do formulário
+// Estendemos o schema para adicionar validação
 const formSchema = insertClientSchema.extend({
-  // Os campos obrigatórios já estão definidos no schema original
+  name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
+  location: z.string().min(3, "Localização deve ter pelo menos 3 caracteres"),
+  phone: z.string().nullable().optional(),
+  email: z.string().email("Email inválido").nullable().optional(),
 });
 
 export default function ClientFormPage() {
   const { isAuthenticated } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
-  const params = useParams<{ id?: string }>();
-  const [_, isEditPage] = useRoute("/clients/edit/:id");
+  const params = useParams();
+  const clientId = params.id;
+  const isEditing = location.includes('/edit/');
   
-  const isEditing = isEditPage && params.id;
-  const clientId = isEditing && params.id ? parseInt(params.id, 10) : undefined;
-  
-  // Carregar dados do cliente se estiver editando
-  const { data: clientData, isLoading } = useQuery({
-    queryKey: ['/api/clients', clientId],
-    enabled: Boolean(isAuthenticated && isEditing && clientId !== undefined),
+  const queryClient = useQueryClient();
+
+  const { data: client, isLoading: clientLoading } = useQuery<Client>({
+    queryKey: [`/api/clients/${clientId}`],
+    enabled: isAuthenticated && isEditing && !!clientId,
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      location: "",
-      email: "",
-      phone: "",
+      name: client?.name || "",
+      location: client?.location || "",
+      email: client?.email || null,
+      phone: client?.phone || null,
     },
   });
 
-  // Atualizar os valores do formulário ao carregar os dados do cliente
-  useEffect(() => {
-    if (clientData && typeof clientData === 'object' && 'name' in clientData) {
+  // Atualizar os valores do formulário quando receber os dados do cliente
+  import React from 'react';
+  
+  React.useEffect(() => {
+    if (client && isEditing) {
       form.reset({
-        name: String(clientData.name || ""),
-        location: String(clientData.location || ""),
-        email: String(clientData.email || ""),
-        phone: String(clientData.phone || ""),
+        name: client.name,
+        location: client.location,
+        email: client.email,
+        phone: client.phone,
       });
     }
-  }, [clientData, form]);
+  }, [client, form, isEditing]);
 
-  // Criar cliente
   const createMutation = useMutation({
-    mutationFn: async (values: z.infer<typeof formSchema>) => {
-      const response = await fetch('/api/clients', {
+    mutationFn: async (data: z.infer<typeof formSchema>) => {
+      const response = await apiRequest('/api/clients', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify(data),
       });
-      
-      if (!response.ok) {
-        throw new Error('Erro ao cadastrar cliente');
-      }
-      
-      return await response.json();
+      return response as Client;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
       toast({
         title: "Cliente cadastrado",
-        description: "O cliente foi cadastrado com sucesso",
+        description: "Cliente foi cadastrado com sucesso.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
-      setLocation("/clients");
+      setLocation('/clients');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
-        title: "Erro ao cadastrar cliente",
-        description: "Ocorreu um erro ao cadastrar o cliente. Tente novamente.",
+        title: "Erro",
+        description: error.message || "Não foi possível cadastrar o cliente. Tente novamente.",
         variant: "destructive",
       });
     },
   });
 
-  // Atualizar cliente
   const updateMutation = useMutation({
-    mutationFn: async (values: z.infer<typeof formSchema>) => {
-      if (!clientId) throw new Error('ID do cliente é necessário');
-
-      const response = await fetch(`/api/clients/${clientId}`, {
+    mutationFn: async (data: z.infer<typeof formSchema>) => {
+      const response = await apiRequest(`/api/clients/${clientId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify(data),
       });
-      
-      if (!response.ok) {
-        throw new Error('Erro ao atualizar cliente');
-      }
-      
-      return await response.json();
+      return response as Client;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/clients/${clientId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
       toast({
         title: "Cliente atualizado",
-        description: "O cliente foi atualizado com sucesso",
+        description: "Cliente foi atualizado com sucesso.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
-      if (clientId) {
-        queryClient.invalidateQueries({ queryKey: ['/api/clients', clientId] });
-      }
       setLocation(`/clients/${clientId}`);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
-        title: "Erro ao atualizar cliente",
-        description: "Ocorreu um erro ao atualizar o cliente. Tente novamente.",
+        title: "Erro",
+        description: error.message || "Não foi possível atualizar o cliente. Tente novamente.",
         variant: "destructive",
       });
     },
@@ -146,24 +130,30 @@ export default function ClientFormPage() {
     return null;
   }
 
-  const isPending = createMutation.isPending || updateMutation.isPending;
-
   return (
-    <AppShell>
-      <div className="container px-4 py-6 max-w-md mx-auto">
-        <Button 
-          variant="ghost" 
-          className="mb-4 p-0 flex items-center gap-1 hover:bg-transparent"
-          onClick={() => isEditing ? setLocation(`/clients/${clientId}`) : setLocation("/clients")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Voltar</span>
-        </Button>
+    <div className="container px-4 py-6 max-w-md mx-auto">
+      <Button 
+        variant="ghost" 
+        className="mb-4 pl-0 gap-1" 
+        onClick={() => setLocation(isEditing ? `/clients/${clientId}` : "/clients")}
+      >
+        <ChevronLeft className="h-4 w-4" /> 
+        Voltar
+      </Button>
 
-        <h1 className="text-2xl font-bold mb-6">
-          {isEditing ? "Editar Cliente" : "Novo Cliente"}
-        </h1>
+      <h1 className="text-2xl font-bold mb-6">
+        {isEditing ? "Editar cliente" : "Novo cliente"}
+      </h1>
 
+      {(clientLoading && isEditing) ? (
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-full mb-4" />
+          <Skeleton className="h-8 w-full mb-4" />
+          <Skeleton className="h-8 w-full mb-4" />
+          <Skeleton className="h-8 w-full mb-4" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      ) : (
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -173,7 +163,10 @@ export default function ClientFormPage() {
                 <FormItem>
                   <FormLabel>Nome*</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nome do cliente" {...field} />
+                    <Input 
+                      placeholder="Nome do cliente" 
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -185,9 +178,12 @@ export default function ClientFormPage() {
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Local*</FormLabel>
+                  <FormLabel>Localização*</FormLabel>
                   <FormControl>
-                    <Input placeholder="Cidade/Localização" {...field} />
+                    <Input 
+                      placeholder="Cidade, Estado" 
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -201,7 +197,11 @@ export default function ClientFormPage() {
                 <FormItem>
                   <FormLabel>Telefone</FormLabel>
                   <FormControl>
-                    <Input placeholder="(00) 00000-0000" {...field} />
+                    <Input 
+                      placeholder="(00) 00000-0000" 
+                      {...field} 
+                      value={field.value || ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -213,12 +213,13 @@ export default function ClientFormPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>E-mail</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input 
                       type="email" 
-                      placeholder="email@exemplo.com" 
+                      placeholder="cliente@email.com" 
                       {...field} 
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -226,12 +227,21 @@ export default function ClientFormPage() {
               )}
             />
             
-            <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending ? "Salvando..." : isEditing ? "Atualizar" : "Cadastrar"}
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={createMutation.isPending || updateMutation.isPending}
+            >
+              {createMutation.isPending || updateMutation.isPending
+                ? "Salvando..."
+                : isEditing
+                  ? "Atualizar cliente"
+                  : "Cadastrar cliente"
+              }
             </Button>
           </form>
         </Form>
-      </div>
-    </AppShell>
+      )}
+    </div>
   );
 }

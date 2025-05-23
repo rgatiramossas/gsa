@@ -7,10 +7,11 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Login from "@/pages/login";
 
-// Importar as páginas que criamos
-import ClientsPage from "@/pages/clients";
-import ClientDetailPage from "@/pages/client-detail";
-import ClientFormPage from "@/pages/client-form";
+// Importamos nossos componentes da pasta pages-new (estrutura simplificada)
+import ClientsPage from "@/pages-new/clients";
+import ClientDetailPage from "@/pages-new/client-detail";
+import ClientNewPage from "@/pages-new/client-new";
+import ClientEditPage from "@/pages-new/client-edit";
 import { useAuth } from "./hooks/useAuth";
 import { AppShell } from "./components/layout/AppShell";
 import { useEffect } from "react";
@@ -51,7 +52,7 @@ function Router() {
       </Route>
       
       <Route path="/clients/new">
-        <ProtectedRoute component={ClientFormPage} />
+        <ProtectedRoute component={ClientNewPage} />
       </Route>
       
       <Route path="/clients/:id">
@@ -59,27 +60,29 @@ function Router() {
       </Route>
       
       <Route path="/clients/edit/:id">
-        {(params) => <ProtectedRoute component={ClientFormPage} id={params.id} isEditing={true} />}
+        {(params) => <ProtectedRoute component={ClientEditPage} id={params.id} />}
       </Route>
       
+      {/* Desabilitadas temporariamente para foco nas páginas de clientes
       <Route path="/services">
-        <ProtectedRoute component={ServicesIndex} />
+        <ProtectedRoute component={Dashboard} />
       </Route>
       
       <Route path="/services/new">
-        <ProtectedRoute component={NewService} />
+        <ProtectedRoute component={Dashboard} />
       </Route>
       
       <Route path="/services/:id">
-        {(params) => <ProtectedRoute component={ServiceDetail} id={params.id} />}
+        {(params) => <ProtectedRoute component={Dashboard} id={params.id} />}
       </Route>
       
       <Route path="/services/edit/:id">
-        {(params) => <ProtectedRoute component={EditService} id={params.id} />}
+        {(params) => <ProtectedRoute component={Dashboard} id={params.id} />}
       </Route>
+      */}
       
       <Route path="/budget">
-        <ProtectedRoute component={BudgetIndex} />
+        <ProtectedRoute component={Dashboard} />
       </Route>
       
       <Route component={NotFound} />

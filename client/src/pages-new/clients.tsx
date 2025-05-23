@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Client } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
+import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlusCircle, MapPin, Phone, Mail, Eye } from "lucide-react";
 
-export default function ClientsPage() {
+export default function ClientsIndex() {
   const { isAuthenticated } = useAuth();
   const [location, setLocation] = useLocation();
   
