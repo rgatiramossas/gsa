@@ -109,15 +109,15 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 // Dashboard com menu lateral
 function Dashboard({ onLogout }: { onLogout: () => void }) {
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       {/* Menu lateral */}
-      <div className="hidden md:flex md:flex-col md:w-64 bg-white border-r h-screen fixed">
+      <div className="bg-white border-r md:w-64 md:fixed md:h-screen md:flex md:flex-col">
         <div className="p-4 border-b">
           <h1 className="text-xl font-bold text-gray-800">Euro Dent Experts</h1>
           <p className="text-sm text-gray-500">Sistema de Gerenciamento</p>
         </div>
         
-        <div className="flex-1 p-4">
+        <div className="hidden md:flex md:flex-col md:flex-1 p-4">
           <nav className="space-y-1">
             <div className="p-2 rounded-md text-white bg-primary">
               Dashboard
@@ -137,7 +137,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           </nav>
         </div>
         
-        <div className="p-4 border-t mt-auto">
+        <div className="hidden md:block p-4 border-t mt-auto">
           <Button 
             onClick={onLogout} 
             variant="outline" 
