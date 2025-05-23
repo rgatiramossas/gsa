@@ -109,6 +109,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 
 // Dashboard com menu lateral
 function Dashboard({ onLogout }: { onLogout: () => void }) {
+  const [_, setLocation] = useLocation();
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col pb-16">
       {/* Header */}
