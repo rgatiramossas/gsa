@@ -8,7 +8,7 @@ import Dashboard from "@/pages/dashboard";
 import Login from "@/pages/login";
 
 // Importamos nossos componentes da pasta pages
-import ClientsPage from "@/pages/clients";
+import ClientsIndex from "@/pages/clients/index";
 import ClientDetailPage from "@/pages/client-detail";
 import ClientFormPage from "@/pages/client-form";
 import MenuPage from "@/pages/menu";
@@ -49,7 +49,7 @@ function Router() {
       </Route>
       
       <Route path="/clients">
-        <ProtectedRoute component={ClientsPage} />
+        <ProtectedRoute component={ClientsIndex} />
       </Route>
       
       <Route path="/clients/new">
