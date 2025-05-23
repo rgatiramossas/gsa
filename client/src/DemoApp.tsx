@@ -138,28 +138,92 @@ function Dashboard({ onLogout }) {
   };
   
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Cabeçalho */}
-      <header className="bg-white shadow-sm p-4 flex justify-between items-center">
-        <div>
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+      {/* Menu lateral para desktop */}
+      <div className="hidden md:flex md:w-64 bg-white border-r flex-col h-screen fixed">
+        <div className="p-4 border-b">
           <h1 className="text-xl font-bold text-gray-800">Euro Dent Experts</h1>
           <p className="text-sm text-gray-500">Sistema de Gerenciamento</p>
         </div>
-        <Button 
-          onClick={onLogout} 
-          variant="outline" 
-          className="flex items-center gap-2"
-        >
-          <LogOutIcon size={16} />
-          <span>Sair</span>
-        </Button>
-      </header>
-      
-      <main className="p-4">
-        <div className="mb-4">
-          <h2 className="text-2xl font-semibold">Dashboard</h2>
-          <p className="text-gray-600">Gerencie os serviços da oficina de reparos</p>
+        
+        <div className="flex-1 overflow-auto py-4">
+          <div className="px-4 mb-4">
+            <p className="text-xs text-gray-500 font-medium mb-2 uppercase">Menu Principal</p>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 p-2 rounded-md bg-primary/10 text-primary">
+                <BarChart3 size={18} />
+                <span className="font-medium">Dashboard</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-md text-gray-600 hover:bg-gray-100">
+                <UserPlusIcon size={18} />
+                <span>Clientes</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-md text-gray-600 hover:bg-gray-100">
+                <ClipboardListIcon size={18} />
+                <span>Serviços</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-md text-gray-600 hover:bg-gray-100">
+                <FileTextIcon size={18} />
+                <span>Orçamentos</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="px-4">
+            <p className="text-xs text-gray-500 font-medium mb-2 uppercase">Configurações</p>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 p-2 rounded-md text-gray-600 hover:bg-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                <span>Configurações</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-md text-gray-600 hover:bg-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                <span>Segurança</span>
+              </div>
+            </div>
+          </div>
         </div>
+        
+        <div className="p-4 border-t mt-auto">
+          <Button 
+            onClick={onLogout} 
+            variant="outline" 
+            className="flex items-center gap-2 w-full"
+          >
+            <LogOutIcon size={16} />
+            <span>Sair</span>
+          </Button>
+        </div>
+      </div>
+      
+      {/* Conteúdo principal */}
+      <div className="flex-1 md:ml-64">
+        {/* Cabeçalho (apenas para mobile) */}
+        <header className="bg-white shadow-sm p-4 flex justify-between items-center md:hidden">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Euro Dent Experts</h1>
+            <p className="text-sm text-gray-500">Sistema de Gerenciamento</p>
+          </div>
+          <Button 
+            onClick={onLogout} 
+            variant="outline" 
+            className="flex items-center gap-2"
+          >
+            <LogOutIcon size={16} />
+            <span>Sair</span>
+          </Button>
+        </header>
+        
+        <main className="p-4">
+          <div className="mb-4">
+            <h2 className="text-2xl font-semibold">Dashboard</h2>
+            <p className="text-gray-600">Gerencie os serviços da oficina de reparos</p>
+          </div>
         
         {/* Métricas do Dashboard */}
         <div className="grid grid-cols-2 gap-4 mb-6">
