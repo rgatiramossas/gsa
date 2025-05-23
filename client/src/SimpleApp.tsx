@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -242,7 +243,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             <span>📊</span>
             <span className="text-xs">Dashboard</span>
           </button>
-          <button className="flex flex-col items-center p-2 text-gray-500">
+          <button 
+            className="flex flex-col items-center p-2 text-gray-500"
+            onClick={() => setLocation("/clients")}
+          >
             <span>👥</span>
             <span className="text-xs">Clientes</span>
           </button>
@@ -262,6 +266,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 
 // Aplicativo principal
 export default function SimpleApp() {
+  const [, setLocation] = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const handleLogin = () => {
